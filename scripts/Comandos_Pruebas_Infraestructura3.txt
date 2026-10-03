@@ -1,0 +1,36 @@
+INFRAESTRUCTURA 3 - COMANDOS DE PRUEBAS
+
+1. Verificar DHCP del usuario
+ip addr show eth0
+ip route
+
+2. Verificar VPN activa
+ipsec statusall
+ip addr show ppp0
+ip route get 10.15.73.130
+
+3. Probar SSH con VPN
+ssh oliver@10.15.73.130
+
+4. Desconectar VPN
+echo "d fortigate" > /var/run/xl2tpd/l2tp-control
+sleep 2
+ipsec down VPN-REMOTE-SSH
+ip addr show ppp0
+
+5. Probar SSH sin VPN (debe fallar)
+ssh oliver@10.15.73.130
+
+6. Probar HTTPS sin VPN mediante la VIP publica
+wget --no-check-certificate -O- https://203.0.113.165
+
+7. Traceroute hacia el servidor
+traceroute 10.15.73.130
+
+8. Volver a activar VPN
+ipsec up VPN-REMOTE-SSH
+echo "c fortigate" > /var/run/xl2tpd/l2tp-control
+sleep 5
+ip route replace 10.15.73.128/28 dev ppp0
+ip addr show ppp0
+ip route get 10.15.73.130
