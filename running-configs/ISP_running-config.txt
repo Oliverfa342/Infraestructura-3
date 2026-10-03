@@ -1,0 +1,92 @@
+ISP#show running-config
+Building configuration...
+
+Current configuration : 1506 bytes
+!
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+!
+hostname ISP
+!
+boot-start-marker
+boot-end-marker
+!
+no aaa new-model
+no ip icmp rate-limit unreachable
+!
+ip dhcp excluded-address 10.15.73.1
+!
+ip dhcp pool VLAN10-USERS
+ network 10.15.73.0 255.255.255.128
+ default-router 10.15.73.1
+ dns-server 8.8.8.8
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+ip tcp synwait-time 5
+!
+interface FastEthernet0/0
+ description TRUNK-HACIA-SW-USERS
+ no ip address
+ duplex full
+!
+interface FastEthernet0/0.10
+ encapsulation dot1Q 10
+ ip address 10.15.73.1 255.255.255.128
+ ip nat inside
+!
+interface FastEthernet1/0
+ description WAN-HACIA-FORTIGATE
+ ip address 203.0.113.166 255.255.255.252
+ ip nat outside
+ speed auto
+ duplex auto
+!
+interface FastEthernet1/1
+ no ip address
+ shutdown
+ speed auto
+ duplex auto
+!
+interface FastEthernet2/0
+ no ip address
+ shutdown
+ speed auto
+ duplex auto
+!
+interface FastEthernet2/1
+ no ip address
+ shutdown
+ speed auto
+ duplex auto
+!
+ip nat inside source list NAT-USERS interface FastEthernet1/0 overload
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+!
+ip access-list standard NAT-USERS
+ permit 10.15.73.0 0.0.0.127
+!
+control-plane
+!
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line aux 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+ stopbits 1
+line vty 0 4
+ login
+!
+end
