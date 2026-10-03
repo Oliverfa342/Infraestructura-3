@@ -1,0 +1,128 @@
+INFRAESTRUCTURA 3 - COMANDOS UTILIZADOS Y PRUEBAS
+Oliver Eliam Aquino Paulino - 20241571
+
+============================================================
+USER-PC-1
+============================================================
+
+# DHCP / red normal
+ip addr flush dev eth0
+ip route flush dev eth0
+ip link set eth0 up
+udhcpc -i eth0
+ip addr show eth0
+ip route
+ping -c 3 10.15.73.1
+ping -c 3 203.0.113.165
+
+# Paquetes
+apk update
+apk add strongswan xl2tpd ppp openssh-client
+
+# Verificacion de algoritmos
+ipsec start
+sleep 2
+swanctl --list-algs | grep -Ei 'DES_CBC|HMAC_SHA1|MODP_1024'
+
+# Arrancar / comprobar IPsec
+ipsec restart
+sleep 2
+ipsec up VPN-REMOTE-SSH
+ipsec statusall
+
+# Arrancar xl2tpd y conectar L2TP
+mkdir -p /var/run/xl2tpd
+xl2tpd
+sleep 2
+echo "c fortigate" > /var/run/xl2tpd/l2tp-control
+sleep 5
+
+# Verificar PPP y ruta del servidor
+ip addr show ppp0
+ip route replace 10.15.73.128/28 dev ppp0
+ip route get 10.15.73.130
+
+# SSH por VPN
+ssh oliver@10.15.73.130
+
+# Apagar VPN
+echo "d fortigate" > /var/run/xl2tpd/l2tp-control
+sleep 2
+ipsec down VPN-REMOTE-SSH
+ip route del 10.15.73.128/28 dev ppp0 2>/dev/null
+ip addr show ppp0
+
+# HTTPS sin VPN por la IP publica/VIP del FortiGate
+wget --no-check-certificate -O- https://203.0.113.165
+
+# SSH sin VPN (debe fallar)
+ssh oliver@10.15.73.130
+
+# Traceroute solicitado
+traceroute 10.15.73.130
+
+============================================================
+WEB-SRV-1
+============================================================
+
+ip addr flush dev eth0
+ip addr add 10.15.73.130/28 dev eth0
+ip link set eth0 up
+ip route del default 2>/dev/null
+ip route add default via 10.15.73.129
+
+apk update
+apk add nginx openssl curl openssh
+
+mkdir -p /var/www/html /etc/nginx/ssl
+openssl req -x509 -nodes -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/web.key \
+  -out /etc/nginx/ssl/web.crt \
+  -days 365 \
+  -subj "/C=DO/O=ITLA-LAB/OU=Cybersecurity/CN=web.lab"
+
+nginx -t
+nginx
+curl -k https://127.0.0.1
+
+ssh-keygen -A
+adduser -D oliver
+echo 'oliver:<SSH_PASSWORD>' | chpasswd
+mkdir -p /run/sshd
+/usr/sbin/sshd -t
+/usr/sbin/sshd
+ps | grep '[s]shd'
+
+ip addr show eth0
+ip route
+ping -c 3 10.15.73.129
+
+============================================================
+SW-USERS - SHOWS
+============================================================
+
+enable
+show running-config
+show vlan brief
+show interfaces trunk
+show interfaces status
+show spanning-tree
+show running-config interface gigabitEthernet0/0
+show running-config interface gigabitEthernet0/1
+
+============================================================
+ISP / R1 - SHOWS
+============================================================
+
+enable
+show running-config
+show ip interface brief
+show ip route
+show ip dhcp binding
+show ip dhcp pool
+show ip nat translations
+show ip nat statistics
+show running-config | section interface
+show running-config | section dhcp
+show running-config | section ip access-list
+show running-config | include ip nat
