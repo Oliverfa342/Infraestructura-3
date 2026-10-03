@@ -197,6 +197,7 @@ traceroute 10.15.73.130
 
 - [ISP / R1](running-configs/ISP_running-config.txt)
 - [SW-USERS](running-configs/SW-USERS_running-config.txt)
+- [FortiGate - Backup completo sanitizado](running-configs/FortiGate_BACKUP_COMPLETO_SANITIZADO.conf)
 - [FortiGate - Configuración relevante sanitizada](running-configs/FortiGate_configuracion_relevante.conf)
 - [USER-PC-1](running-configs/USER-PC-1_configuracion.sh)
 - [WEB-SRV-1](running-configs/WEB-SRV_configuracion.sh)
